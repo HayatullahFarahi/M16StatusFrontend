@@ -1,6 +1,5 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext, useEffect } from 'react';
 import { Container, Card, Form, Row, Col, Button } from 'react-bootstrap';
-
 import Select from 'react-select';
 import Message from './Massage';
 import Loader from './Loader';
@@ -17,6 +16,28 @@ const SearchForm = () => {
 
   const { searchFormData } = useContext(GlobalContext);
   const { getSearchFormData } = useContext(GlobalContext);
+
+  const [token, setToken] = useState();
+
+  const handleReCaptchaLoad = () => {
+    window.grecaptcha.ready(() => {
+      window.grecaptcha
+        .execute(process.env.REACT_APP_ReCAPTCHA_Site_Key, {
+          action: 'submit',
+        })
+        .then((token) => {
+          setToken(token);
+          console.log('token fetched successfully', token);
+        });
+    });
+  };
+
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.src = `https://www.google.com/recaptcha/api.js?render=${process.env.REACT_APP_ReCAPTCHA_Site_Key}`;
+    script.addEventListener('load', handleReCaptchaLoad);
+    document.body.appendChild(script);
+  }, []);
 
   const selectThemePrams = (theme) => ({
     ...theme,
@@ -46,6 +67,11 @@ const SearchForm = () => {
       }, 3000);
     } else {
       setLoading(true);
+      console.log(token, 'submitted');
+      console.log(
+        process.env.REACT_APP_ReCAPTCHA_Site_Key,
+        process.env.REACT_APP_TEST
+      );
       setTimeout(() => {
         setLoading(false);
       }, 3000);
@@ -63,6 +89,7 @@ const SearchForm = () => {
                     type='number'
                     placeholder='M16 Code'
                     value={m16}
+                    required
                     onChange={(e) => setM16(e.target.value)}
                   />
                 </Form.Group>
@@ -104,6 +131,12 @@ const SearchForm = () => {
             <Row>
               <Col></Col>
               <Col>
+                {/* <div
+                  className='g-recaptcha'
+                  data-sitekey={process.env.REACT_APP_ReCAPTCHA_Site_Key}
+                  data-size='invisible'
+                  data-callback='onSubmit'
+                /> */}
                 {loading ? (
                   <Loader />
                 ) : (
